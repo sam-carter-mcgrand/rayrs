@@ -1,5 +1,6 @@
+use crate::common::random_double_range;
 use std::fmt::{Display, Formatter};
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use std::ops::{Add, AddAssign, Div, Mul, Neg, Sub};
 
 #[derive(Copy, Clone, Default)]
 pub struct Vec3 {
@@ -27,8 +28,43 @@ impl Vec3 {
     pub fn length_squared(self) -> f64 {
         self.x() * self.x() + self.y() * self.y() + self.z() * self.z()
     }
-    pub fn dot(self, rhs: Self) -> f64 {
+    pub fn near_zero(self) -> bool {
+        const EPS: f64 = 1.0e-8;
+        // Return true if the vector is close to zero in all dimensions
+        self.f[0].abs() < EPS && self.f[1].abs() < EPS && self.f[2].abs() < EPS
+    }
+    pub fn dot(self, rhs: &Self) -> f64 {
         self.x() * rhs.x() + self.y() * rhs.y() + self.z() * rhs.z()
+    }
+    fn random_range(min: f64, max: f64) -> Vec3 {
+        Vec3 {
+            f: [
+                random_double_range(min, max),
+                random_double_range(min, max),
+                random_double_range(min, max),
+            ],
+        }
+    }
+    fn random_in_unit_sphere() -> Vec3 {
+        loop {
+            let v = Vec3::random_range(-1.0, 1.0);
+            if v.length_squared() < 1.0 {
+                return v;
+            }
+        }
+    }
+    pub fn random_unit_vector() -> Vec3 {
+        unit_vector(Vec3::random_in_unit_sphere())
+    }
+    pub fn random_on_hemisphere(normal: &Vec3) -> Vec3 {
+        let on_unit_sphere = Vec3::random_unit_vector();
+        let dot_product = on_unit_sphere.dot(normal);
+
+        if dot_product > 0.0 {
+            on_unit_sphere
+        } else {
+            -on_unit_sphere
+        }
     }
 }
 
@@ -67,12 +103,32 @@ impl Add for Vec3 {
     }
 }
 
+impl AddAssign for Vec3 {
+    fn add_assign(&mut self, other: Self) {
+        *self = Self {
+            f: [
+                self.x() + other.x(),
+                self.y() + other.y(),
+                self.z() + other.z(),
+            ],
+        };
+    }
+}
+
 impl Sub for Vec3 {
     type Output = Vec3;
     fn sub(self, r: Vec3) -> Vec3 {
         Vec3 {
             f: [self.x() - r.x(), self.y() - r.y(), self.z() - r.z()],
         }
+    }
+}
+
+impl Mul for Vec3 {
+    type Output = Vec3;
+
+    fn mul(self, v: Vec3) -> Vec3 {
+        Vec3::new(self.x() * v.x(), self.y() * v.y(), self.z() * v.z())
     }
 }
 
@@ -105,4 +161,8 @@ impl Div<f64> for Vec3 {
 
 pub fn unit_vector(v: Vec3) -> Vec3 {
     v / v.length()
+}
+
+pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
+    v - 2.0 * v.dot(&n) * n
 }

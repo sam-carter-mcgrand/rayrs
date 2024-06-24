@@ -1,4 +1,7 @@
-use crate::{common, vec3::Vec3};
+use crate::{
+    common,
+    vec3::{self, Vec3},
+};
 use std::io::Write;
 
 pub type Colour = Vec3;
@@ -17,4 +20,8 @@ pub fn write_colour(out: &mut impl Write, pixel_colour: Colour, samples_per_pixe
     let b_clamped = (256.0 * common::clamp(b, 0.0, 0.999)) as i32;
 
     writeln!(out, "{} {} {}", r_clamped, g_clamped, b_clamped).expect("Writing colour");
+}
+
+pub fn random() -> Colour {
+    vec3::random_in_unit_sphere()
 }

@@ -36,34 +36,13 @@ impl Vec3 {
     pub fn dot(self, rhs: &Self) -> f64 {
         self.x() * rhs.x() + self.y() * rhs.y() + self.z() * rhs.z()
     }
-    fn random_range(min: f64, max: f64) -> Vec3 {
+    pub fn cross(self, rhs: &Self) -> Vec3 {
         Vec3 {
             f: [
-                random_double_range(min, max),
-                random_double_range(min, max),
-                random_double_range(min, max),
+                self.y() * rhs.z() - self.z() * rhs.y(),
+                self.z() * rhs.x() - self.x() * rhs.z(),
+                self.x() * rhs.y() - self.y() * rhs.x(),
             ],
-        }
-    }
-    fn random_in_unit_sphere() -> Vec3 {
-        loop {
-            let v = Vec3::random_range(-1.0, 1.0);
-            if v.length_squared() < 1.0 {
-                return v;
-            }
-        }
-    }
-    pub fn random_unit_vector() -> Vec3 {
-        unit_vector(Vec3::random_in_unit_sphere())
-    }
-    pub fn random_on_hemisphere(normal: &Vec3) -> Vec3 {
-        let on_unit_sphere = Vec3::random_unit_vector();
-        let dot_product = on_unit_sphere.dot(normal);
-
-        if dot_product > 0.0 {
-            on_unit_sphere
-        } else {
-            -on_unit_sphere
         }
     }
 }
@@ -159,10 +138,65 @@ impl Div<f64> for Vec3 {
     }
 }
 
+pub fn random_in_unit_sphere() -> Vec3 {
+    loop {
+        let v = random_range(-1.0, 1.0);
+        if v.length_squared() < 1.0 {
+            return v;
+        }
+    }
+}
+
+pub fn random_unit_vector() -> Vec3 {
+    unit_vector(random_in_unit_sphere())
+}
+
+pub fn random_on_hemisphere(normal: &Vec3) -> Vec3 {
+    let on_unit_sphere = random_unit_vector();
+    let dot_product = on_unit_sphere.dot(normal);
+
+    if dot_product > 0.0 {
+        on_unit_sphere
+    } else {
+        -on_unit_sphere
+    }
+}
+
 pub fn unit_vector(v: Vec3) -> Vec3 {
     v / v.length()
 }
 
 pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
     v - 2.0 * v.dot(&n) * n
+}
+
+pub fn refract(uv: Vec3, n: Vec3, relative_refractive_index: f64) -> Vec3 {
+    let cos_theta = -uv.dot(&n).min(1.0);
+    let r_perpendicular = relative_refractive_index * (uv + n * cos_theta);
+    let r_parallel = -f64::sqrt(f64::abs(1.0 - r_perpendicular.length_squared())) * n;
+
+    r_perpendicular + r_parallel
+}
+
+pub fn random_in_unit_disk() -> Vec3 {
+    loop {
+        let v = Vec3::new(
+            random_double_range(-1.0, 1.0),
+            random_double_range(-1.0, 1.0),
+            0.0,
+        );
+        if v.length_squared() < 1.0 {
+            return v;
+        }
+    }
+}
+
+pub fn random_range(min: f64, max: f64) -> Vec3 {
+    Vec3 {
+        f: [
+            random_double_range(min, max),
+            random_double_range(min, max),
+            random_double_range(min, max),
+        ],
+    }
 }

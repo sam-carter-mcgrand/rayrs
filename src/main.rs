@@ -33,7 +33,9 @@ fn main() {
                     // diffuse
                     let albedo = colour::random() * colour::random();
                     let material = Rc::new(Lambertian::new(albedo));
-                    world.add(Box::new(Sphere::new(centre, 0.2, material)));
+                    // add movement with a second centre point at t = 1
+                    let centre2 = centre + Point3::new(0.0, random_double_range(0.0, 0.5), 0.0);
+                    world.add(Box::new(Sphere::new_moving(centre, centre2, 0.2, material)));
                 } else if choose_mat < 0.95 {
                     // metal
                     let albedo = vec3::random_range(0.5, 1.0);

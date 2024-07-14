@@ -6,7 +6,8 @@ use crate::ray::Ray;
 use crate::vec3::Point3;
 
 pub struct Sphere {
-    centre: Point3,
+    centre1: Point3,
+    centre2: Point3,
     radius: f64,
     mat: Rc<dyn Material>,
 }
@@ -14,16 +15,31 @@ pub struct Sphere {
 impl Sphere {
     pub fn new(c: Point3, r: f64, m: Rc<dyn Material>) -> Sphere {
         Sphere {
-            centre: c,
+            centre1: c,
+            centre2: c,
             radius: r,
             mat: m,
         }
+    }
+
+    pub fn new_moving(centre1: Point3, centre2: Point3, r: f64, m: Rc<dyn Material>) -> Sphere {
+        Sphere {
+            centre1,
+            centre2,
+            radius: r,
+            mat: m,
+        }
+    }
+
+    fn centre(&self, tm: f64) -> Point3 {
+        // linearly interp between two centres
+        self.centre1 + tm * (self.centre2 - self.centre1)
     }
 }
 
 impl Hittable for Sphere {
     fn hit(&self, ray: &Ray, ray_tmin: f64, ray_tmax: f64, rec: &mut HitRecord) -> bool {
-        let oc = self.centre - ray.origin;
+        let oc = self.centre(ray.tm) - ray.origin;
         let a = ray.direction.length_squared();
         let h = ray.direction.dot(&oc);
         let c = oc.length_squared() - self.radius * self.radius;
@@ -46,7 +62,7 @@ impl Hittable for Sphere {
 
         rec.t = root;
         rec.p = ray.at(root);
-        let outward_normal = (rec.p - self.centre) / self.radius;
+        let outward_normal = (rec.p - self.centre(ray.tm)) / self.radius;
         rec.set_face_normal(&ray, outward_normal);
         rec.mat = Some(self.mat.clone());
         true

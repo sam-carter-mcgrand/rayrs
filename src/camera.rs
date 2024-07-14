@@ -1,17 +1,17 @@
 use crate::colour;
 use crate::colour::Colour;
-use crate::common::{self, degrees_to_radians};
+use crate::common::{self, degrees_to_radians, random_double_range};
 use crate::hittable::Hittable;
 use crate::hittable::*;
 use crate::ray::Ray;
 use crate::vec3::*;
 use crate::vec3::{Point3, Vec3};
 
-const IMAGE_WIDTH: i32 = 1200;
+const IMAGE_WIDTH: i32 = 300;
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
 const IMAGE_HEIGHT: i32 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as i32;
-const SAMPLES_PER_PIXEL: i32 = 300;
-const MAX_DEPTH: i32 = 25;
+const SAMPLES_PER_PIXEL: i32 = 100;
+const MAX_DEPTH: i32 = 5;
 
 pub struct Camera {
     origin: Point3,
@@ -74,15 +74,17 @@ impl Camera {
             self.defocus_disk_sample()
         };
 
-        Ray::new(
+        let ray_time = random_double_range(0.0, 1.0);
+
+        Ray::new_tm(
             ray_origin,
             self.lower_left_corner + u * self.horizontal + v * self.vertical - ray_origin,
+            ray_time,
         )
     }
 
     fn defocus_disk_sample(&self) -> Vec3 {
         let p = random_in_unit_disk();
-        //TODO the below is wrong
         self.origin + p.x() * self.defocus_disk_basis_u + p.y() * self.defocus_disk_basis_v
     }
 
